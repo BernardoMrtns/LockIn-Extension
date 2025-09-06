@@ -25,7 +25,7 @@
 
 body{
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background: var(--bg);
   color: var(--text);
   width: 360px;
@@ -153,8 +153,9 @@ input[type="number"]:focus {
   display: flex; 
   gap: 12px; 
   margin-top: 12px; 
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 button{ 
@@ -168,11 +169,15 @@ button{
   font-size: 14px;
   font-family: inherit;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  text-align: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  min-width: 80px;
+  min-width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 button::before {
@@ -198,6 +203,19 @@ button:hover {
 
 button:active {
   transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+button:disabled:hover {
+  background: var(--accent);
+  transform: none;
+  box-shadow: none;
 }
 
 button.secondary{ 

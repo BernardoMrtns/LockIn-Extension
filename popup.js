@@ -1,4 +1,3 @@
-// popup.js
 const STORAGE_KEYS = {
   SITES: 'blockedSites',
   IS_FOCUS: 'isFocusing',
@@ -124,7 +123,7 @@ $('startBtn').addEventListener('click', async () => {
 
   if (isFocus && isPaused) {
     // Resume
-    chrome.runtime.sendMessage({ action: 'resumeFocus' }, resp => {
+    chrome.runtime.sendMessage({ action: 'resumeFocus' }, () => {
       loadUI();
       window.close();
     });
@@ -137,7 +136,7 @@ $('startBtn').addEventListener('click', async () => {
     await setStorage({ [STORAGE_KEYS.LAST_USED_TIME]: minutes });
 
     await setStorage({ [STORAGE_KEYS.SITES]: sites });
-    chrome.runtime.sendMessage({ action: 'startFocus', minutes }, resp => {
+    chrome.runtime.sendMessage({ action: 'startFocus', minutes }, () => {
       loadUI();
       window.close();
     });
@@ -145,26 +144,39 @@ $('startBtn').addEventListener('click', async () => {
 });
 
 $('pauseBtn').addEventListener('click', async () => {
-  const st = await getStorage([STORAGE_KEYS.IS_PAUSED]);
+  const st = await getStorage([STORAGE_KEYS.IS_PAUSED, STORAGE_KEYS.IS_FOCUS]);
   const isPaused = st[STORAGE_KEYS.IS_PAUSED] || false;
+  const isFocus = st[STORAGE_KEYS.IS_FOCUS] || false;
 
+  if (!isFocus) return; // Safety check, though button should be disabled
+
+  // Optimistic UI update for instant feedback
+  const pauseBtn = $('pauseBtn');
   if (isPaused) {
-    // Resume
-    chrome.runtime.sendMessage({ action: 'resumeFocus' }, resp => {
-      loadUI();
-      window.close();
-    });
+    // About to resume: update UI to "active" state
+    $('statusText').innerText = 'Modo foco ativo';
+    pauseBtn.textContent = 'Pausar';
+    pauseBtn.setAttribute('aria-label', 'Pausar foco');
   } else {
-    // Pause
-    chrome.runtime.sendMessage({ action: 'pauseFocus' }, resp => {
-      loadUI();
-      window.close();
-    });
+    // About to pause: update UI to "paused" state
+    $('statusText').innerText = 'Modo foco pausado';
+    $('timerText').innerText = 'Pausado';
+    updateCircle(0, 1, 'Pausado');
+    pauseBtn.textContent = 'Retomar';
+    pauseBtn.setAttribute('aria-label', 'Retomar foco');
   }
+
+  // Send message to background
+  const action = isPaused ? 'resumeFocus' : 'pauseFocus';
+  chrome.runtime.sendMessage({ action }, async () => {
+    // Reload UI from storage to confirm/sync
+    await loadUI();
+    // Removed window.close() to keep popup open for better UX
+  });
 });
 
 $('stopBtn').addEventListener('click', async () => {
-  chrome.runtime.sendMessage({ action: 'stopFocus' }, resp => {
+  chrome.runtime.sendMessage({ action: 'stopFocus' }, () => {
     loadUI();
     window.close();
   });

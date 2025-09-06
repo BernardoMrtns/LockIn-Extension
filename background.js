@@ -1,4 +1,3 @@
-// background.js - service worker
 const DEFAULT_FOCUS_MIN = 25;
 
 const STORAGE_KEYS = {
