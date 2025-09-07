@@ -1,7 +1,3 @@
-Perfeito 👍 Então vou te entregar a versão do **README.md** já formatada em Markdown, mas com a descrição e tópicos em **português**. Assim você só copia e cola no GitHub.
-
----
-
 # 🔒 Lock In — Extensão de Produtividade para o Chrome
 
 O **Lock In** é uma extensão para o Google Chrome criada para ajudar você a manter o foco.
