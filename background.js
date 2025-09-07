@@ -66,6 +66,9 @@ async function updateBadge() {
   chrome.action.setBadgeBackgroundColor({ color: '#ff4d4d' });
 }
 
+// Track tabs we've already handled to prevent duplicate counts
+const handledTabs = new Set();
+
 // Close or redirect tab if blocked
 async function handlePotentialBlockedTab(tabId, changeInfoOrUrl) {
   // get current data
@@ -79,6 +82,10 @@ async function handlePotentialBlockedTab(tabId, changeInfoOrUrl) {
   const url = tab && tab.url ? tab.url : (typeof changeInfoOrUrl === 'string' ? changeInfoOrUrl : (changeInfoOrUrl && changeInfoOrUrl.url) || '');
   if (!url) return;
 
+  // Check if we've already handled this tab recently to prevent duplicate counts
+  const tabKey = `${tabId}-${url}`;
+  if (handledTabs.has(tabKey)) return;
+
   // if matches, close or redirect
   const matched = sites.find(p => {
     try {
@@ -87,8 +94,12 @@ async function handlePotentialBlockedTab(tabId, changeInfoOrUrl) {
     } catch(e) { return false; }
   });
   if (matched) {
+    // Mark this tab as handled
+    handledTabs.add(tabKey);
+
     // register attempt
     await registerAttempt(matched);
+
     // redirect to extension's blocked page
     const blockedUrl = chrome.runtime.getURL('blocked.html') + `?site=${encodeURIComponent(matched)}&tabId=${tabId}`;
     try {
@@ -98,6 +109,9 @@ async function handlePotentialBlockedTab(tabId, changeInfoOrUrl) {
       // if can't update (sometimes for chrome:// or extension pages), try closing tab
       try { await chrome.tabs.remove(tabId); } catch(err) {}
     }
+
+    // Clean up the handled tab after a short delay
+    setTimeout(() => handledTabs.delete(tabKey), 5000);
   }
 }
 
@@ -111,6 +125,15 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 chrome.tabs.onCreated.addListener(async (tab) => {
   // Do nothing here; rely on onUpdated for URL changes
+});
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  // Clean up handled tabs when they're closed
+  for (const key of handledTabs) {
+    if (key.startsWith(`${tabId}-`)) {
+      handledTabs.delete(key);
+    }
+  }
 });
 
 // Messages from popup or pages
@@ -275,3 +298,10 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 
 chrome.runtime.onStartup.addListener(() => updateBadge());
 chrome.runtime.onInstalled.addListener(() => updateBadge());
+
+// Periodic cleanup of handled tabs to prevent memory leaks
+setInterval(() => {
+  if (handledTabs.size > 100) {
+    handledTabs.clear();
+  }
+}, 300000); // Clean up every 5 minutes if set gets too large

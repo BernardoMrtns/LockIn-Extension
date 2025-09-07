@@ -38,7 +38,7 @@ function updateStatus(st) {
     if (isPaused) {
       $('statusText').innerText = 'Modo foco pausado';
       $('timerText').innerText = 'Pausado';
-      updateCircle(0, 1, 'Pausado');
+      updateCircle(0, 1, 'Pausa');
     } else {
       $('statusText').innerText = 'Modo foco ativo';
       updateTimer(endTs, st);
@@ -150,29 +150,19 @@ $('pauseBtn').addEventListener('click', async () => {
 
   if (!isFocus) return; // Safety check, though button should be disabled
 
-  // Optimistic UI update for instant feedback
-  const pauseBtn = $('pauseBtn');
   if (isPaused) {
-    // About to resume: update UI to "active" state
-    $('statusText').innerText = 'Modo foco ativo';
-    pauseBtn.textContent = 'Pausar';
-    pauseBtn.setAttribute('aria-label', 'Pausar foco');
+    // Resume
+    chrome.runtime.sendMessage({ action: 'resumeFocus' }, () => {
+      loadUI();
+      window.close();
+    });
   } else {
-    // About to pause: update UI to "paused" state
-    $('statusText').innerText = 'Modo foco pausado';
-    $('timerText').innerText = 'Pausado';
-    updateCircle(0, 1, 'Pausado');
-    pauseBtn.textContent = 'Retomar';
-    pauseBtn.setAttribute('aria-label', 'Retomar foco');
+    // Pause
+    chrome.runtime.sendMessage({ action: 'pauseFocus' }, () => {
+      loadUI();
+      window.close();
+    });
   }
-
-  // Send message to background
-  const action = isPaused ? 'resumeFocus' : 'pauseFocus';
-  chrome.runtime.sendMessage({ action }, async () => {
-    // Reload UI from storage to confirm/sync
-    await loadUI();
-    // Removed window.close() to keep popup open for better UX
-  });
 });
 
 $('stopBtn').addEventListener('click', async () => {

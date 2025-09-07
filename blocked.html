@@ -102,27 +102,6 @@
     <div id="siteText"></div>
   <button id="closeBtn" class="close-btn">Fechar</button>
   </div>
-<script>
-  const params = new URLSearchParams(location.search);
-  const site = params.get('site') || '';
-  const tabId = parseInt(params.get('tabId'), 10); // pode ser NaN se não vier
-
-  document.getElementById('siteText').innerText = site ? `Tentativa: ${site}` : '';
-
-  document.getElementById('closeBtn').addEventListener('click', () => {
-    // Tenta primeiro fechar via background (mais confiável)
-    chrome.runtime.sendMessage({ action: 'closeThisTab', tabId }, (resp) => {
-      // se por algum motivo não fechou, tenta window.close() como fallback visual
-      if (!resp || resp.status !== 'closed') {
-        try {
-          window.close();
-        } catch (e) {
-          // Redireciona para uma página em branco como último recurso
-          window.location.href = 'about:blank';
-        }
-      }
-    });
-  });
-</script>
+  <script src="blocked.js"></script>
 </body>
 </html>
